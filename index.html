@@ -163,6 +163,7 @@
             height: 40px;
             transition: all 0.3s ease;
             filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.3));
+            cursor: pointer;
         }
 
         .logo:hover {
@@ -252,6 +253,21 @@
             margin-bottom: 40px;
             line-height: 1.6;
             animation: heroSubtitle 1.5s ease-out 0.3s both;
+        }
+
+        .hero-categories {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero-categories.fade-out {
+            opacity: 0;
+            transform: translateY(20px);
         }
 
         .hero-badge {
@@ -710,6 +726,7 @@
             margin-bottom: 25px;
             filter: drop-shadow(0 0 15px rgba(46, 204, 113, 0.4));
             transition: all 0.4s ease;
+            cursor: pointer;
         }
 
         .footer-logo:hover {
@@ -1236,9 +1253,8 @@
     <!-- Navigation -->
     <nav class="nav">
         <div class="nav-content">
-            <img src="Logo_blanco.png" alt="Pyros" class="logo">
+            <img src="Logo_blanco.png" alt="Pyros" class="logo" onclick="scrollToTop()">
             <div class="nav-links">
-                <a href="#hero" class="nav-link">Inicio</a>
                 <a href="#links" class="nav-link">Recursos</a>
                 <a href="#features" class="nav-link">Características</a>
             </div>
@@ -1261,7 +1277,7 @@
             </div>
             <h1>Pyros</h1>
             <p>Inteligencia Artificial para la identificación y gestión automatizada de vehículos</p>
-            <p style="font-size: 1rem; color: var(--color-text-secondary);">
+            <p class="hero-categories">
                 Categoría A: Mejor Proyecto Avanzado • Categoría C: Mejor Proyecto Sostenible y/o Social
             </p>
         </div>
@@ -1353,7 +1369,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
-            <img src="Logo_blanco.png" alt="Pyros" class="footer-logo">
+            <img src="Logo_blanco.png" alt="Pyros" class="footer-logo" onclick="scrollToTop()">
             <p class="footer-text">
                 Plataforma de Inteligencia Artificial para la gestión automatizada de vehículos
             </p>
@@ -1594,11 +1610,20 @@
             }
         });
 
+        // Scroll to top function
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
         // Enhanced parallax effect for hero section
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
             const hero = document.querySelector('.hero');
             const vehicles = document.querySelectorAll('.vehicle');
+            const heroCategories = document.querySelector('.hero-categories');
             
             if (hero) {
                 hero.style.transform = `translateY(${scrolled * 0.5}px)`;
@@ -1608,6 +1633,25 @@
                 const speed = 0.3 + (index * 0.1);
                 vehicle.style.transform = `translateY(${scrolled * speed}px) rotate(${scrolled * 0.01}deg)`;
             });
+
+            // Fade out categories text when scrolling down
+            if (heroCategories) {
+                const fadeStart = 600; // Start fading at 50px scroll
+                const fadeEnd = 700;    // Completely faded at 200px scroll
+                
+                if (scrolled > fadeStart) {
+                    const fadeProgress = Math.min((scrolled - fadeStart) / (fadeEnd - fadeStart), 1);
+                    const opacity = Math.max(0, 1 - fadeProgress);
+                    
+                    heroCategories.style.opacity = opacity;
+                    heroCategories.style.transform = 'translateY(0px)';
+                    heroCategories.style.filter = 'blur(100px)';
+                } else {
+                    heroCategories.style.opacity = 1;
+                    heroCategories.style.transform = 'translateY(0px)';
+                    heroCategories.style.filter = 'blur(0px)';
+                }
+            }
         });
 
         // Navbar background on scroll
