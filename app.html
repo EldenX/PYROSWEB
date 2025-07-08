@@ -116,7 +116,7 @@
 
   <!-- Footer -->
   <div class="mt-8 text-center text-gray-400 text-xs z-10 fade-in" style="animation-delay: 1s;">
-    Pyros © 2025 • Powered by Bia API
+    Pyros © 2025 • Powered by Gemini API
   </div>
 
   <script>
@@ -186,55 +186,90 @@
     const resultBox = document.getElementById('resultBox');
     const loading = document.getElementById('loading');
 
-    // Activar la cámara al cargar
+    // Activate the camera on load
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(stream => {
         video.srcObject = stream;
       })
       .catch(err => {
-        alert('No se pudo acceder a la cámara. Puedes usar el botón "Subir Foto".');
+        // Use a custom message box instead of alert()
+        resultBox.innerHTML = '<p class="text-red-500">No se pudo acceder a la cámara. Puedes usar el botón "Subir Foto".</p>';
         console.error('Error al acceder a la cámara:', err);
       });
 
-    // Función para enviar la imagen a la API y mostrar el resultado
+    // Function to send the image to the Gemini API and display the result
     async function enviarImagenAApi(file) {
       loading.style.display = "flex";
-      resultBox.innerHTML = "Procesando imagen...";
-
-      const formData = new FormData();
-      formData.append("file", file);
+      resultBox.innerHTML = "Procesando imagen con IA...";
 
       try {
-        const response = await fetch("https://api.pyros.site/procesar-imagen/", {
-          method: "POST",
-          body: formData,
+        // Convert the image file to Base64
+        const base64ImageData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]); // Get only the Base64 part
+          reader.onerror = error => reject(error);
+          reader.readAsDataURL(file);
+        });
+
+        // Gemini API key (replace with your actual key if deploying)
+        // WARNING: Storing API keys directly in frontend code is not recommended for production.
+        const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk"; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        // Construct the payload for the Gemini API
+        const payload = {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: "¿Cuál es la marca y el modelo del coche en esta imagen? Por favor, proporciona solo la marca y el modelo. Por ejemplo: 'SEAT Ibiza'." },
+                {
+                  inlineData: {
+                    mimeType: file.type,
+                    data: base64ImageData
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.2, // Lower temperature for more focused answers
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 100 // Limit output to keep it concise
+          }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
-          throw new Error("Error al procesar la imagen");
+          const errorData = await response.json();
+          throw new Error(`Error de la API de Gemini: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
         }
 
-        const data = await response.json();
-        // Mostrar imagen procesada desde base64
-        const url = "data:image/jpeg;base64," + data.image_b64;
-        preview.src = url;
-        preview.style.display = "block";
-        // Mostrar información del coche
-        if (data.car_info) {
-          resultBox.innerHTML = `<strong>Marca:</strong> ${data.car_info.make}<br>
-                                 <strong>Modelo:</strong> ${data.car_info.model}<br>
-                                 <strong>Probabilidad:</strong> ${(data.car_info.prob * 100).toFixed(2)}%`;
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+          const carInfo = result.candidates[0].content.parts[0].text;
+          resultBox.innerHTML = `<strong>Coche detectado:</strong> ${carInfo}`;
         } else {
-          resultBox.innerHTML = "No se detectó ningún coche.";
+          resultBox.innerHTML = "No se pudo detectar el coche o la respuesta fue inesperada.";
         }
       } catch (error) {
         resultBox.innerHTML = "Error: " + error.message;
+        console.error("Error al procesar la imagen con Gemini:", error);
       } finally {
         loading.style.display = "none";
       }
     }
 
-    // Capturar foto desde la cámara y enviarla a la API
+    // Capture photo from camera and send it to the API
     takePhotoBtn.addEventListener('click', () => {
       canvasEl.width = video.videoWidth;
       canvasEl.height = video.videoHeight;
@@ -249,7 +284,7 @@
       }, "image/jpeg");
     });
 
-    // Subir foto desde el dispositivo y enviarla a la API
+    // Upload photo from device and send it to the API
     uploadBtn.addEventListener('click', () => {
       fileInput.click();
     });
