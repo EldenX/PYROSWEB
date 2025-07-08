@@ -82,6 +82,23 @@
     #parkingsBtn.active {
       @apply bg-gradient-to-r from-green-500 to-green-700;
     }
+
+    /* Flash Effect for Camera */
+    .flash-effect {
+      animation: flash 0.2s ease-out;
+    }
+
+    @keyframes flash {
+      0% {
+        filter: brightness(1);
+      }
+      50% {
+        filter: brightness(2); /* Brighter flash */
+      }
+      100% {
+        filter: brightness(1);
+      }
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-purple-100 via-pink-100 to-red-100 min-h-screen flex flex-col items-center p-6 relative overflow-y-auto">
@@ -564,15 +581,25 @@
 
     // Capture photo from camera and send it to the API
     takePhotoBtn.addEventListener('click', () => {
+      // Vibrate the device
+      if (navigator.vibrate) {
+        navigator.vibrate(200); // Vibrate for 200ms
+      }
+
+      // Add flash effect
+      video.classList.add('flash-effect');
+      setTimeout(() => {
+        video.classList.remove('flash-effect');
+      }, 200); // Flash duration
+
       canvasEl.width = video.videoWidth;
       canvasEl.height = video.videoHeight;
       canvasEl.getContext('2d').drawImage(video, 0, 0, canvasEl.width, canvasEl.height);
       canvasEl.toBlob((blob) => {
         if (blob) {
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
-          preview.src = URL.createObjectURL(blob);
-          previewContainer.style.display = "block"; // Show the preview with the captured image
-          // video.style.display = "none"; // Keep video visible
+          // preview.src = URL.createObjectURL(blob); // No longer displaying captured image here
+          previewContainer.style.display = "none"; // Ensure preview container is hidden for captured photos
           enviarImagenAApi(file);
         }
       }, "image/jpeg");
