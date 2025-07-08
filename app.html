@@ -114,7 +114,7 @@
 
   <!-- Footer -->
   <div class="mt-8 text-center text-gray-400 text-xs z-10 fade-in" style="animation-delay: 1s;">
-    Pyros © 2025 • Powered by Enrique
+    Pyros © 2025 • Powered by Pyros Systems
   </div>
 
   <script>
@@ -185,7 +185,8 @@
     const loading = document.getElementById('loading');
 
     // Activate the camera on load
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    // Changed facingMode to true for better iOS compatibility
+    navigator.mediaDevices.getUserMedia({ video: true }) 
       .then(stream => {
         video.srcObject = stream;
         video.style.display = "block"; // Ensure video is visible
