@@ -94,10 +94,7 @@
         <span>Subir Foto</span>
       </button>
 
-      <button id="restartCameraBtn" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group" style="display: none;">
-        <i class="fas fa-sync-alt text-xl group-hover:rotate-12 transition-transform duration-300"></i>
-        <span>Reiniciar Cámara</span>
-      </button>
+      <!-- The "Reiniciar Cámara" button is no longer needed as the camera restarts automatically -->
     </div>
 
     <!-- Hidden Upload Input -->
@@ -189,7 +186,7 @@
     const fileInput = document.getElementById('fileInput');
     const resultBox = document.getElementById('resultBox');
     const loading = document.getElementById('loading');
-    const restartCameraBtn = document.getElementById('restartCameraBtn'); // New button
+    // const restartCameraBtn = document.getElementById('restartCameraBtn'); // Removed as it's no longer needed
 
     let currentStream; // To keep track of the camera stream
 
@@ -201,7 +198,7 @@
         currentStream = stream; // Store the stream
         video.style.display = 'block'; // Show video feed
         preview.style.display = 'none'; // Hide image preview
-        restartCameraBtn.style.display = 'none'; // Hide restart button
+        // restartCameraBtn.style.display = 'none'; // No longer needed
         resultBox.innerHTML = '<p>Usa la cámara o sube una foto para analizarla.</p>'; // Reset result box
       } catch (err) {
         resultBox.innerHTML = '<p class="text-red-500">No se pudo acceder a la cámara. Puedes usar el botón "Subir Foto".</p>';
@@ -289,6 +286,7 @@
         console.error("Error al procesar la imagen con Gemini:", error);
       } finally {
         loading.style.display = "none";
+        startCamera(); // Restart camera automatically after analysis
       }
     }
 
@@ -306,7 +304,7 @@
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
           preview.src = URL.createObjectURL(blob);
           enviarImagenAApi(file);
-          restartCameraBtn.style.display = 'inline-flex'; // Show restart button
+          // restartCameraBtn.style.display = 'inline-flex'; // No longer needed
         }
       }, "image/jpeg");
     });
@@ -324,12 +322,12 @@
       if (file) {
         preview.src = URL.createObjectURL(file);
         enviarImagenAApi(file);
-        restartCameraBtn.style.display = 'inline-flex'; // Show restart button
+        // restartCameraBtn.style.display = 'inline-flex'; // No longer needed
       }
     });
 
-    // Event listener for the new restart camera button
-    restartCameraBtn.addEventListener('click', startCamera);
+    // Event listener for the new restart camera button (removed)
+    // restartCameraBtn.addEventListener('click', startCamera);
   </script>
 </body>
 </html>
