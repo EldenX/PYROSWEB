@@ -76,7 +76,8 @@
     <!-- Video Stream / Preview Captured Image -->
     <div class="w-full flex flex-col items-center fade-in" style="animation-delay: 0.4s;">
       <!-- The video element will now always be visible to show the camera feed -->
-      <video id="video" class="w-full h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay></video>
+      <!-- Added playsinline and muted for better iOS compatibility -->
+      <video id="video" class="w-full h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay playsinline muted></video>
       <!-- The preview image will be hidden by default and shown only when a photo is taken or uploaded -->
       <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow hidden" src="" alt="Vista previa" style="max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
     </div>
@@ -114,7 +115,7 @@
 
   <!-- Footer -->
   <div class="mt-8 text-center text-gray-400 text-xs z-10 fade-in" style="animation-delay: 1s;">
-    Pyros © 2025 • Powered by Pyros Systems
+    Pyros © 2025 • Powered by Gemini API
   </div>
 
   <script>
@@ -185,7 +186,7 @@
     const loading = document.getElementById('loading');
 
     // Activate the camera on load
-    // Changed facingMode to true for better iOS compatibility
+    // Changed facingMode to true for better iOS compatibility, added playsinline and muted to video tag
     navigator.mediaDevices.getUserMedia({ video: true }) 
       .then(stream => {
         video.srcObject = stream;
