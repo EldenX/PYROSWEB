@@ -6,7 +6,7 @@
   <title>Pyros - Smart Photo Analyzer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link rel="icon" type="image/png" href="=icono_blanco.png">
+  <link rel="icon" type="image/png" href="https://placehold.co/32x32/000/fff?text=icono_blanco.png">
   <style>
     /* Estilo para el video, por defecto con espejo (para cámara frontal) */
     video {
@@ -71,15 +71,15 @@
         display: flex;
         width: 100%;
         position: relative;
-        justify-content: center;
-        margin-top: 2rem; /* Mantener este margen para la separación de los botones de foto/subida */
-        padding: 0 1em;
-        /* La barra inferior se moverá al resultBox */
+        justify-content: space-around; /* Changed for better spacing */
+        margin-top: 2rem;
+        gap: 1rem; /* Added gap between buttons */
+        /* Removed padding here to allow buttons to stretch to full width */
     }
 
     .tab-button {
         all: unset;
-        flex-grow: 1;
+        flex-grow: 1; /* Make buttons expand */
         z-index: 100;
         display: flex;
         cursor: pointer;
@@ -103,9 +103,9 @@
         color: white;
         border-top-left-radius: 0.5rem;
         border-top-right-radius: 0.5rem;
-        margin-bottom: -2px; /* Overlap the container's border */
+        margin-bottom: 0px; /* Adjusted to align with resultBox border */
         padding-top: 0.75rem;
-        padding-bottom: calc(0.75rem + 2px); /* Match bottom padding */
+        padding-bottom: calc(0.75rem + 4px); /* Match resultBox border thickness (4px) */
         transition: background-color var(--duration), color var(--duration);
     }
 
@@ -115,9 +115,10 @@
         border-radius: 0; /* Remove default radius */
         border-bottom-left-radius: 1.5rem; /* Keep original bottom radius */
         border-bottom-right-radius: 1.5rem; /* Keep original bottom radius */
-        box-shadow: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Added shadow */
         background-color: #f9fafb; /* gray-50 */
         margin-top: 0; /* Eliminar el espacio entre los botones y la información */
+        padding-top: 1rem; /* Added padding to create space from top border */
     }
     /* --- FIN DE NUEVOS ESTILOS --- */
 
@@ -147,7 +148,10 @@
   <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col py-8 px-6 space-y-6 relative z-10 fade-in">
     
     <div class="text-center fade-in" style="animation-delay: 0.2s;">
-      <img src="Logo_negro.png" alt="Pyros Logo" class="mx-auto mb-2 w-36 h-auto">
+      <!-- Logo now clickable -->
+      <a href="https://pyros.site" target="_blank" rel="noopener noreferrer">
+        <img src="https://placehold.co/150x50/000/fff?text=Logo_negro.png" alt="Pyros Logo" class="mx-auto mb-2 w-36 h-auto">
+      </a>
       <p class="text-gray-500 text-sm">Tu analizador inteligente de fotos</p>
     </div>
 
@@ -176,20 +180,22 @@
     </div>
 
     <!-- --- ESTRUCTURA HTML DE PESTAÑAS ACTUALIZADA --- -->
-    <div id="infoTabs">
-      <button id="bomberosBtn" class="tab-button active" style="--bgColorItem: #ef4444;">
-        <i class="fas fa-fire-extinguisher mr-2"></i>Bomberos
-      </button>
-      <button id="talleresBtn" class="tab-button" style="--bgColorItem: #3b82f6;">
-        <i class="fas fa-wrench mr-2"></i>Talleres
-      </button>
-      <button id="parkingsBtn" class="tab-button" style="--bgColorItem: #22c55e;">
-        <i class="fas fa-parking mr-2"></i>Parkings
-      </button>
-    </div>
+    <div id="tabsContainer" class="w-full"> <!-- Removed px-6 here -->
+      <div id="infoTabs">
+        <button id="bomberosBtn" class="tab-button active" style="--bgColorItem: #ef4444;">
+          <i class="fas fa-fire-extinguisher mr-2"></i>Bomberos
+        </button>
+        <button id="talleresBtn" class="tab-button" style="--bgColorItem: #3b82f6;">
+          <i class="fas fa-wrench mr-2"></i>Talleres
+        </button>
+        <button id="parkingsBtn" class="tab-button" style="--bgColorItem: #22c55e;">
+          <i class="fas fa-parking mr-2"></i>Parkings
+        </button>
+      </div>
 
-    <div id="resultBox" class="w-full bg-white p-6 text-left text-gray-700 text-sm min-h-[8rem] transition-opacity duration-500 fade-in">
-      <p>Usa la cámara o sube una foto para analizarla.</p>
+      <div id="resultBox" class="w-full bg-white p-6 text-left text-gray-700 text-sm min-h-[8rem] transition-opacity duration-500 fade-in rounded-b-3xl">
+        <p>Usa la cámara o sube una foto para analizarla.</p>
+      </div>
     </div>
     <!-- --- FIN DE LA ESTRUCTURA ACTUALIZADA --- -->
 
@@ -558,7 +564,7 @@
       canvasEl.toBlob((blob) => {
         if (blob) {
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
-          preview.src = URL.createObjectURL(blob);
+          preview.src = URL.createObjectURL(file);
           previewContainer.style.display = "block";
           enviarImagenAApi(file);
         }
