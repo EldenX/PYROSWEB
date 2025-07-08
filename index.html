@@ -457,11 +457,6 @@
             box-shadow: var(--shadow-glow);
         }
 
-        .link-card:hover::before {
-            left: 0;
-            opacity: 0.1;
-        }
-
         .link-icon {
             font-size: 3.5rem;
             margin-bottom: 20px;
@@ -1287,6 +1282,18 @@
     <section class="main-links" id="links">
         <h2 class="section-title fade-in">Recursos Pyros</h2>
         <div class="links-grid">
+            <div class="link-card fade-in" onclick="openLink('app')">
+                <div class="link-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 class="link-title">Aplicación Web</h3>
+                <p class="link-description">
+                    Accede a la aplicación web de Pyros para analizar fotos de vehículos directamente desde tu navegador.
+                </p>
+                <button class="link-button">
+                    Abrir Aplicación <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
             <div class="link-card fade-in" onclick="openLink('demo')">
                 <div class="link-icon">
                     <i class="fas fa-rocket"></i>
@@ -1514,6 +1521,10 @@
         // Link functions
         function openLink(type) {
             switch(type) {
+                case 'app':
+                    // Abrir app.html en una nueva pestaña
+                    window.open('app.html', '_blank');
+                    break;
                 case 'demo':
                     // Abrir example como ejemplo práctico
                     window.open('example.html', '_blank');
