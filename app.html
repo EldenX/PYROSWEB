@@ -145,7 +145,7 @@
 
   <canvas id="particles"></canvas>
 
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col py-8 px-6 space-y-6 relative z-10 fade-in">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col py-8 px-6 space-y-6 relative z-10 fade-in" id="mainCard">
     
     <div class="text-center fade-in" style="animation-delay: 0.2s;">
       <!-- Logo now clickable -->
@@ -359,9 +359,9 @@
       });
 
     async function callGeminiApi(promptText, mimeType = null, imageData = null) {
-      const apiKey = "";
+      const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk";
       if (!apiKey) {
-        throw new Error('La clave API de Gemini no está configurada.');
+        throw new Error('La clave API no está configurada.');
       }
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
       const parts = [{ text: promptText }];
@@ -379,13 +379,13 @@
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Error de la API de Gemini: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
+        throw new Error(`Error de la API: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
       }
       const result = await response.json();
       if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
         return result.candidates[0].content.parts[0].text;
       } else {
-        throw new Error("No se pudo obtener una respuesta de la API de Gemini.");
+        throw new Error("No se pudo obtener una respuesta de la API.");
       }
     }
 
@@ -430,7 +430,7 @@
 
       } catch (error) {
         resultBox.innerHTML = "Error: " + error.message;
-        console.error("Error al procesar la imagen con Gemini:", error);
+        console.error("Error al procesar la imagen con la API:", error);
       } finally {
         loading.style.display = "none";
       }
@@ -451,7 +451,13 @@
         const carDescription = `${detectedCarInfo.marca} ${detectedCarInfo.modelo} (${detectedCarInfo.año})`;
         let prompt;
         if (detectedCarInfo.propulsion?.toLowerCase().includes('eléctrico') || detectedCarInfo.propulsion?.toLowerCase().includes('híbrido')) {
-          prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), lista 3-4 puntos clave para bomberos: tipo de vehículo, ubicación/capacidad de batería, puntos de desconexión de alto voltaje, extintor recomendado (advertir NO usar agua si hay alto voltaje) y si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
+          // MODIFICACIÓN: Se asegura la inclusión de 'Fireman Access' para marcas Renault/Dacia/Alpine/Mobilize
+          // y se elimina la referencia a "sistemas adicionales anti-incendios".
+          if (detectedCarInfo.marca.toLowerCase() === 'renault' || detectedCarInfo.marca.toLowerCase() === 'dacia' || detectedCarInfo.marca.toLowerCase() === 'alpine' || detectedCarInfo.marca.toLowerCase() === 'mobilize') {
+            prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), lista 3-4 puntos clave para bomberos: tipo de vehículo, ubicación/capacidad de batería, extintor recomendado (advertir NO usar agua si hay alto voltaje). **Puntos de desconexión de alto voltaje: Ubicados comúnmente bajo el capó o en el maletero (inventado para demo).** **Este vehículo cuenta con el sistema 'Fireman Access' de Renault, ubicado típicamente bajo el asiento trasero para inundación de batería.** Indica si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
+          } else {
+            prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), lista 3-4 puntos clave para bomberos: tipo de vehículo, ubicación/capacidad de batería, extintor recomendado (advertir NO usar agua si hay alto voltaje). **Puntos de desconexión de alto voltaje: Ubicados comúnmente bajo el capó o en el maletero (inventado para demo).** Si tiene sistema 'Fireman Access' y su ubicación (inventa la ubicación si no la conoces, para fines de demostración), indica si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
+          }
         } else {
           prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion || 'combustión'}), lista 3-4 puntos clave para bomberos: tipo de vehículo, riesgos de combustible, extintor recomendado y si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. No menciones baterías de alto voltaje. Sé muy conciso y no uses formato Markdown.`;
         }
@@ -588,6 +594,37 @@
             const activeColor = activeItem.style.getPropertyValue('--bgColorItem');
             resultBox.style.borderColor = activeColor;
         }
+    });
+
+    // --- DRAG & DROP DE IMÁGENES ---
+    function handleDropFile(file) {
+      if (file && file.type.startsWith('image/')) {
+        preview.src = URL.createObjectURL(file);
+        previewContainer.style.display = "block";
+        enviarImagenAApi(file);
+      } else {
+        resultBox.innerHTML = '<p class="text-red-500">Solo se pueden procesar imágenes.</p>';
+      }
+    }
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Permitir arrastrar sobre el video, el área de preview y la tarjeta principal
+    const mainCard = document.getElementById('mainCard');
+    [video, previewContainer, mainCard].forEach(el => {
+      el.addEventListener('dragenter', preventDefaults, false);
+      el.addEventListener('dragover', preventDefaults, false);
+      el.addEventListener('dragleave', preventDefaults, false);
+      el.addEventListener('drop', function(e) {
+        preventDefaults(e);
+        let dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          handleDropFile(dt.files[0]);
+        }
+      }, false);
     });
   </script>
 </body>
