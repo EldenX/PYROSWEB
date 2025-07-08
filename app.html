@@ -73,34 +73,32 @@
       <p class="text-gray-500 text-sm">Tu analizador inteligente de fotos</p>
     </div>
 
-    <!-- Video Stream -->
+    <!-- Video Stream / Preview Captured Image -->
     <div class="w-full flex flex-col items-center fade-in" style="animation-delay: 0.4s;">
+      <!-- The video element will now always be visible to show the camera feed -->
       <video id="video" class="w-full h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay></video>
-
-      <!-- Buttons -->
-      <div class="flex space-x-4 w-full justify-center">
-        <button id="takePhotoBtn" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
-          <i class="fas fa-camera text-xl group-hover:rotate-12 transition-transform duration-300"></i>
-          <span>Sacar Foto</span>
-        </button>
-
-        <button id="uploadBtn" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
-          <i class="fas fa-upload text-xl group-hover:rotate-12 transition-transform duration-300"></i>
-          <span>Subir Foto</span>
-        </button>
-      </div>
-
-      <!-- Hidden Upload Input -->
-      <input type="file" id="fileInput" accept="image/*" class="hidden">
-
-      <!-- Canvas para captura de foto -->
-      <canvas id="canvas" class="hidden"></canvas>
+      <!-- The preview image will be hidden by default and shown only when a photo is taken or uploaded -->
+      <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow hidden" src="" alt="Vista previa" style="max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
     </div>
 
-    <!-- Preview Captured Image -->
-    <div class="w-full flex justify-center fade-in" style="animation-delay: 0.6s;">
-      <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow" src="" alt="Vista previa" style="display: none; max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
+    <!-- Buttons -->
+    <div class="flex space-x-4 w-full justify-center">
+      <button id="takePhotoBtn" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
+        <i class="fas fa-camera text-xl group-hover:rotate-12 transition-transform duration-300"></i>
+        <span>Sacar Foto</span>
+      </button>
+
+      <button id="uploadBtn" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
+        <i class="fas fa-upload text-xl group-hover:rotate-12 transition-transform duration-300"></i>
+        <span>Subir Foto</span>
+      </button>
     </div>
+
+    <!-- Hidden Upload Input -->
+    <input type="file" id="fileInput" accept="image/*" class="hidden">
+
+    <!-- Canvas para captura de foto (still hidden, used for processing) -->
+    <canvas id="canvas" class="hidden"></canvas>
 
     <!-- Result Box -->
     <div id="resultBox" class="w-full bg-gray-50 rounded-xl p-4 text-center text-gray-700 text-sm min-h-24 transition-opacity duration-500 fade-in" style="animation-delay: 0.8s;">
@@ -116,7 +114,7 @@
 
   <!-- Footer -->
   <div class="mt-8 text-center text-gray-400 text-xs z-10 fade-in" style="animation-delay: 1s;">
-    Pyros © 2025 • Powered by Gemini API
+    Pyros © 2025 • Powered by Enrique
   </div>
 
   <script>
@@ -190,17 +188,21 @@
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(stream => {
         video.srcObject = stream;
+        video.style.display = "block"; // Ensure video is visible
       })
       .catch(err => {
         // Use a custom message box instead of alert()
         resultBox.innerHTML = '<p class="text-red-500">No se pudo acceder a la cámara. Puedes usar el botón "Subir Foto".</p>';
         console.error('Error al acceder a la cámara:', err);
+        video.style.display = "none"; // Hide video if camera access fails
       });
 
     // Function to send the image to the Gemini API and display the result
     async function enviarImagenAApi(file) {
       loading.style.display = "flex";
       resultBox.innerHTML = "Procesando imagen con IA...";
+      video.style.display = "none"; // Hide video when processing an image
+      preview.style.display = "block"; // Show the preview image
 
       try {
         // Convert the image file to Base64
@@ -213,7 +215,7 @@
 
         // Gemini API key (replace with your actual key if deploying)
         // WARNING: Storing API keys directly in frontend code is not recommended for production.
-        const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk"; 
+        const apiKey = ""; // API key is left empty, Canvas will provide it at runtime.
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         // Construct the payload for the Gemini API
@@ -278,7 +280,8 @@
         if (blob) {
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
           preview.src = URL.createObjectURL(blob);
-          preview.style.display = "block";
+          preview.style.display = "block"; // Show the preview with the captured image
+          video.style.display = "none"; // Hide the video stream
           enviarImagenAApi(file);
         }
       }, "image/jpeg");
@@ -293,7 +296,8 @@
       const file = event.target.files[0];
       if (file) {
         preview.src = URL.createObjectURL(file);
-        preview.style.display = "block";
+        preview.style.display = "block"; // Show the preview with the uploaded image
+        video.style.display = "none"; // Hide the video stream
         enviarImagenAApi(file);
       }
     });
