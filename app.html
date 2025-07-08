@@ -7,11 +7,13 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
+    /* Estilo para el video, por defecto con espejo (para cámara frontal) */
     video {
       transform: scaleX(-1);
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     }
-    .mirror {
+    /* Clase para quitar el espejo (para cámara trasera) */
+    .no-mirror {
       transform: scaleX(1);
     }
 
@@ -75,10 +77,10 @@
 
     <!-- Video Stream / Preview Captured Image -->
     <div class="w-full flex flex-col items-center fade-in" style="animation-delay: 0.4s;">
-      <!-- The video element will now always be visible to show the camera feed -->
-      <!-- Added playsinline and muted for better iOS compatibility -->
+      <!-- El elemento de video siempre será visible para mostrar la transmisión de la cámara -->
+      <!-- Se añadieron playsinline y muted para una mejor compatibilidad con iOS -->
       <video id="video" class="w-full h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay playsinline muted></video>
-      <!-- The preview image will be hidden by default and shown only when a photo is taken or uploaded -->
+      <!-- La imagen de previsualización estará oculta por defecto y se mostrará solo cuando se tome o suba una foto -->
       <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow hidden" src="" alt="Vista previa" style="max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
     </div>
 
@@ -98,7 +100,7 @@
     <!-- Hidden Upload Input -->
     <input type="file" id="fileInput" accept="image/*" class="hidden">
 
-    <!-- Canvas para captura de foto (still hidden, used for processing) -->
+    <!-- Canvas para captura de foto (sigue oculto, usado para procesamiento) -->
     <canvas id="canvas" class="hidden"></canvas>
 
     <!-- Result Box -->
@@ -115,7 +117,7 @@
 
   <!-- Footer -->
   <div class="mt-8 text-center text-gray-400 text-xs z-10 fade-in" style="animation-delay: 1s;">
-    Pyros © 2025 • Powered by Gemini API
+    Pyros © 2025 • Powered by Elden
   </div>
 
   <script>
@@ -186,41 +188,74 @@
     const loading = document.getElementById('loading');
 
     // Activate the camera on load
-    // Changed facingMode to true for better iOS compatibility, added playsinline and muted to video tag
-    navigator.mediaDevices.getUserMedia({ video: true }) 
+    // Intenta obtener la cámara trasera primero, luego recurre a cualquier cámara disponible
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
       .then(stream => {
         video.srcObject = stream;
-        video.style.display = "block"; // Ensure video is visible
+        video.style.display = "block"; // Asegura que el video sea visible
+        // Comprueba si la cámara activa es la trasera para quitar el espejo
+        const track = stream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+        const settings = track.getSettings();
+
+        if (settings.facingMode === 'environment') {
+          video.classList.add('no-mirror'); // Añade clase para quitar el espejo
+        } else {
+          video.classList.remove('no-mirror'); // Asegura que el espejo esté si es cámara frontal
+        }
       })
       .catch(err => {
-        // Use a custom message box instead of alert()
-        resultBox.innerHTML = '<p class="text-red-500">No se pudo acceder a la cámara. Puedes usar el botón "Subir Foto".</p>';
-        console.error('Error al acceder a la cámara:', err);
-        video.style.display = "none"; // Hide video if camera access fails
+        console.warn('No se pudo acceder a la cámara trasera (environment), intentando la cámara por defecto:', err);
+        // Recurre a cualquier cámara disponible (normalmente la frontal en móvil si la trasera falla)
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(stream => {
+            video.srcObject = stream;
+            video.style.display = "block";
+            // Comprueba si la cámara activa es la frontal para mantener el espejo
+            const track = stream.getVideoTracks()[0];
+            const settings = track.getSettings();
+            if (settings.facingMode === 'user' || !settings.facingMode) { // 'user' para frontal, undefined si no se especifica
+              video.classList.remove('no-mirror'); // Asegura que el espejo esté si es cámara frontal
+            } else {
+              video.classList.add('no-mirror'); // Quita el espejo si es otra (ej. trasera por defecto)
+            }
+          })
+          .catch(err => {
+            resultBox.innerHTML = '<p class="text-red-500">No se pudo acceder a la cámara. Puedes usar el botón "Subir Foto".</p>';
+            console.error('Error al acceder a la cámara:', err);
+            video.style.display = "none"; // Oculta el video si el acceso a la cámara falla
+          });
       });
 
-    // Function to send the image to the Gemini API and display the result
+    // Función para enviar la imagen a la API de Gemini y mostrar el resultado
     async function enviarImagenAApi(file) {
       loading.style.display = "flex";
       resultBox.innerHTML = "Procesando imagen con IA...";
-      video.style.display = "none"; // Hide video when processing an image
-      preview.style.display = "block"; // Show the preview image
+      video.style.display = "none"; // Oculta el video al procesar una imagen
+      preview.style.display = "block"; // Muestra la imagen de previsualización
 
       try {
-        // Convert the image file to Base64
+        // Convierte el archivo de imagen a Base64
         const base64ImageData = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(',')[1]); // Get only the Base64 part
+          reader.onload = () => resolve(reader.result.split(',')[1]); // Obtiene solo la parte Base64
           reader.onerror = error => reject(error);
           reader.readAsDataURL(file);
         });
 
-        // Gemini API key (replace with your actual key if deploying)
-        // WARNING: Storing API keys directly in frontend code is not recommended for production.
-        const apiKey = ""; // API key is left empty, Canvas will provide it at runtime.
+        // Clave de la API de Gemini (reemplazar con tu clave real si se despliega)
+        // ADVERTENCIA: Almacenar claves API directamente en el código frontend no es recomendable para producción.
+        const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk"; // La clave API se deja vacía, Canvas la proporcionará en tiempo de ejecución.
+        
+        if (!apiKey) {
+          resultBox.innerHTML = '<p class="text-red-500">Error: La clave API de Gemini no está configurada. Asegúrate de que el entorno de Canvas la esté proporcionando o inserta tu clave directamente si no estás en Canvas.</p>';
+          loading.style.display = "none";
+          return; // Detiene la ejecución si no hay clave API
+        }
+
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-        // Construct the payload for the Gemini API
+        // Construye el payload para la API de Gemini
         const payload = {
           contents: [
             {
@@ -237,10 +272,10 @@
             }
           ],
           generationConfig: {
-            temperature: 0.2, // Lower temperature for more focused answers
+            temperature: 0.2, // Temperatura más baja para respuestas más enfocadas
             topP: 0.95,
             topK: 40,
-            maxOutputTokens: 100 // Limit output to keep it concise
+            maxOutputTokens: 100 // Limita la salida para mantenerla concisa
           }
         };
 
@@ -273,7 +308,7 @@
       }
     }
 
-    // Capture photo from camera and send it to the API
+    // Captura la foto de la cámara y la envía a la API
     takePhotoBtn.addEventListener('click', () => {
       canvasEl.width = video.videoWidth;
       canvasEl.height = video.videoHeight;
@@ -282,14 +317,14 @@
         if (blob) {
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
           preview.src = URL.createObjectURL(blob);
-          preview.style.display = "block"; // Show the preview with the captured image
-          video.style.display = "none"; // Hide the video stream
+          preview.style.display = "block"; // Muestra la previsualización con la imagen capturada
+          video.style.display = "none"; // Oculta la transmisión de video
           enviarImagenAApi(file);
         }
       }, "image/jpeg");
     });
 
-    // Upload photo from device and send it to the API
+    // Sube la foto desde el dispositivo y la envía a la API
     uploadBtn.addEventListener('click', () => {
       fileInput.click();
     });
@@ -298,8 +333,8 @@
       const file = event.target.files[0];
       if (file) {
         preview.src = URL.createObjectURL(file);
-        preview.style.display = "block"; // Show the preview with the uploaded image
-        video.style.display = "none"; // Hide the video stream
+        preview.style.display = "block"; // Muestra la previsualización con la imagen subida
+        video.style.display = "none"; // Oculta la transmisión de video
         enviarImagenAApi(file);
       }
     });
