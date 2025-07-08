@@ -75,8 +75,8 @@
 
     <!-- Video Stream -->
     <div class="w-full flex flex-col items-center fade-in" style="animation-delay: 0.4s;">
-      <!-- Video element for live camera feed -->
-      <video id="video" class="w-full h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay></video>
+      <!-- Video element for livea camera feed -->
+      <video id="video" class="w-full h-40 md:h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay></video>
       
       <!-- Image element for captured/uploaded photo preview -->
       <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow" src="" alt="Vista previa" style="display: none; max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
@@ -117,7 +117,7 @@
 
   <!-- Footer -->
   <div class="mt-8 text-center text-gray-400 text-xs z-10 fade-in" style="animation-delay: 1s;">
-    Pyros © 2025 • Powered by Gemini API
+    Pyros © 2025 • Powered by Enrique Barcina
   </div>
 
   <script>
@@ -304,7 +304,6 @@
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
           preview.src = URL.createObjectURL(blob);
           enviarImagenAApi(file);
-          // restartCameraBtn.style.display = 'inline-flex'; // No longer needed
         }
       }, "image/jpeg");
     });
@@ -322,12 +321,8 @@
       if (file) {
         preview.src = URL.createObjectURL(file);
         enviarImagenAApi(file);
-        // restartCameraBtn.style.display = 'inline-flex'; // No longer needed
       }
     });
-
-    // Event listener for the new restart camera button (removed)
-    // restartCameraBtn.addEventListener('click', startCamera);
   </script>
 </body>
 </html>
