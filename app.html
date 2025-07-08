@@ -75,32 +75,36 @@
 
     <!-- Video Stream -->
     <div class="w-full flex flex-col items-center fade-in" style="animation-delay: 0.4s;">
+      <!-- Video element for live camera feed -->
       <video id="video" class="w-full h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay></video>
-
-      <!-- Buttons -->
-      <div class="flex space-x-4 w-full justify-center">
-        <button id="takePhotoBtn" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
-          <i class="fas fa-camera text-xl group-hover:rotate-12 transition-transform duration-300"></i>
-          <span>Sacar Foto</span>
-        </button>
-
-        <button id="uploadBtn" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
-          <i class="fas fa-upload text-xl group-hover:rotate-12 transition-transform duration-300"></i>
-          <span>Subir Foto</span>
-        </button>
-      </div>
-
-      <!-- Hidden Upload Input -->
-      <input type="file" id="fileInput" accept="image/*" class="hidden">
-
-      <!-- Canvas para captura de foto -->
-      <canvas id="canvas" class="hidden"></canvas>
-    </div>
-
-    <!-- Preview Captured Image -->
-    <div class="w-full flex justify-center fade-in" style="animation-delay: 0.6s;">
+      
+      <!-- Image element for captured/uploaded photo preview -->
       <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow" src="" alt="Vista previa" style="display: none; max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
     </div>
+
+    <!-- Buttons -->
+    <div class="flex flex-wrap gap-4 w-full justify-center mt-4">
+      <button id="takePhotoBtn" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
+        <i class="fas fa-camera text-xl group-hover:rotate-12 transition-transform duration-300"></i>
+        <span>Sacar Foto</span>
+      </button>
+
+      <button id="uploadBtn" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
+        <i class="fas fa-upload text-xl group-hover:rotate-12 transition-transform duration-300"></i>
+        <span>Subir Foto</span>
+      </button>
+
+      <button id="restartCameraBtn" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group" style="display: none;">
+        <i class="fas fa-sync-alt text-xl group-hover:rotate-12 transition-transform duration-300"></i>
+        <span>Reiniciar Cámara</span>
+      </button>
+    </div>
+
+    <!-- Hidden Upload Input -->
+    <input type="file" id="fileInput" accept="image/*" class="hidden">
+
+    <!-- Canvas para captura de foto -->
+    <canvas id="canvas" class="hidden"></canvas>
 
     <!-- Result Box -->
     <div id="resultBox" class="w-full bg-gray-50 rounded-xl p-4 text-center text-gray-700 text-sm min-h-24 transition-opacity duration-500 fade-in" style="animation-delay: 0.8s;">
@@ -120,7 +124,7 @@
   </div>
 
   <script>
-    // Particles Background
+    // Particles Background (No changes here)
     const canvas = document.getElementById('particles');
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -185,17 +189,36 @@
     const fileInput = document.getElementById('fileInput');
     const resultBox = document.getElementById('resultBox');
     const loading = document.getElementById('loading');
+    const restartCameraBtn = document.getElementById('restartCameraBtn'); // New button
 
-    // Activate the camera on load
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(stream => {
+    let currentStream; // To keep track of the camera stream
+
+    // Function to start the camera
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
-      })
-      .catch(err => {
-        // Use a custom message box instead of alert()
+        currentStream = stream; // Store the stream
+        video.style.display = 'block'; // Show video feed
+        preview.style.display = 'none'; // Hide image preview
+        restartCameraBtn.style.display = 'none'; // Hide restart button
+        resultBox.innerHTML = '<p>Usa la cámara o sube una foto para analizarla.</p>'; // Reset result box
+      } catch (err) {
         resultBox.innerHTML = '<p class="text-red-500">No se pudo acceder a la cámara. Puedes usar el botón "Subir Foto".</p>';
         console.error('Error al acceder a la cámara:', err);
-      });
+      }
+    }
+
+    // Function to stop the camera
+    function stopCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+      }
+    }
+
+    // Activate the camera on load
+    window.onload = startCamera; // Call startCamera when the window loads
 
     // Function to send the image to the Gemini API and display the result
     async function enviarImagenAApi(file) {
@@ -211,8 +234,8 @@
           reader.readAsDataURL(file);
         });
 
-        // Gemini API key (replace with your actual key if deploying)
-        // WARNING: Storing API keys directly in frontend code is not recommended for production.
+        // Gemini API key (hardcoded for "one-day-only" use without backend)
+        // WARNING: Storing API keys directly in frontend code is NOT recommended for production.
         const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
@@ -269,8 +292,12 @@
       }
     }
 
-    // Capture photo from camera and send it to the API
+    // Capturar foto desde la cámara y enviarla a la API
     takePhotoBtn.addEventListener('click', () => {
+      stopCamera(); // Stop the camera stream
+      video.style.display = 'none'; // Hide the video element
+      preview.style.display = 'block'; // Show the image preview element
+      
       canvasEl.width = video.videoWidth;
       canvasEl.height = video.videoHeight;
       canvasEl.getContext('2d').drawImage(video, 0, 0, canvasEl.width, canvasEl.height);
@@ -278,14 +305,17 @@
         if (blob) {
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
           preview.src = URL.createObjectURL(blob);
-          preview.style.display = "block";
           enviarImagenAApi(file);
+          restartCameraBtn.style.display = 'inline-flex'; // Show restart button
         }
       }, "image/jpeg");
     });
 
-    // Upload photo from device and send it to the API
+    // Subir foto desde el dispositivo y enviarla a la API
     uploadBtn.addEventListener('click', () => {
+      stopCamera(); // Stop the camera stream if active
+      video.style.display = 'none'; // Hide the video element
+      preview.style.display = 'block'; // Show the image preview element
       fileInput.click();
     });
 
@@ -293,10 +323,13 @@
       const file = event.target.files[0];
       if (file) {
         preview.src = URL.createObjectURL(file);
-        preview.style.display = "block";
         enviarImagenAApi(file);
+        restartCameraBtn.style.display = 'inline-flex'; // Show restart button
       }
     });
+
+    // Event listener for the new restart camera button
+    restartCameraBtn.addEventListener('click', startCamera);
   </script>
 </body>
 </html>
