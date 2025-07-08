@@ -98,13 +98,11 @@
       <p class="text-gray-500 text-sm">Tu analizador inteligente de fotos</p>
     </div>
 
-    <!-- Video Stream / Preview Captured Image -->
+    <!-- Video Stream -->
     <div class="w-full flex flex-col items-center fade-in" style="animation-delay: 0.4s;">
       <!-- El elemento de video siempre será visible para mostrar la transmisión de la cámara -->
       <!-- Se añadieron playsinline y muted para una mejor compatibilidad con iOS -->
       <video id="video" class="w-full h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay playsinline muted></video>
-      <!-- La imagen de previsualización estará oculta por defecto y se mostrará solo cuando se tome o suba una foto -->
-      <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow hidden" src="" alt="Vista previa" style="max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
     </div>
 
     <!-- Buttons -->
@@ -125,6 +123,11 @@
 
     <!-- Canvas para captura de foto (sigue oculto, usado para procesamiento) -->
     <canvas id="canvas" class="hidden"></canvas>
+
+    <!-- New container for Preview Captured Image (between buttons and tabs) -->
+    <div id="previewContainer" class="w-full flex flex-col items-center mt-4 hidden">
+      <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow" src="" alt="Vista previa" style="max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
+    </div>
 
     <!-- Tabs/Buttons for information categories -->
     <div id="infoTabs" class="flex justify-center w-full mt-4 bg-gray-100 rounded-xl p-2 space-x-2 shadow-md">
@@ -211,6 +214,7 @@
     const video = document.getElementById('video');
     const canvasEl = document.getElementById('canvas');
     const preview = document.getElementById('preview');
+    const previewContainer = document.getElementById('previewContainer'); // Get the new container
     const takePhotoBtn = document.getElementById('takePhotoBtn');
     const uploadBtn = document.getElementById('uploadBtn');
     const fileInput = document.getElementById('fileInput');
@@ -369,8 +373,8 @@
     async function enviarImagenAApi(file) {
       loading.style.display = "flex";
       resultBox.innerHTML = "Procesando imagen con IA...";
-      video.style.display = "none"; // Hide video when processing an image
-      preview.style.display = "block"; // Show the preview image
+      // video.style.display = "none"; // Keep video visible
+      previewContainer.style.display = "none"; // Hide previous preview
       
       // Clear cached info when a new photo is taken
       detectedCarInfo = null; 
@@ -567,8 +571,8 @@
         if (blob) {
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
           preview.src = URL.createObjectURL(blob);
-          preview.style.display = "block"; // Show the preview with the captured image
-          video.style.display = "none"; // Hide the video stream
+          previewContainer.style.display = "block"; // Show the preview with the captured image
+          // video.style.display = "none"; // Keep video visible
           enviarImagenAApi(file);
         }
       }, "image/jpeg");
@@ -583,8 +587,8 @@
       const file = event.target.files[0];
       if (file) {
         preview.src = URL.createObjectURL(file);
-        preview.style.display = "block"; // Show the preview with the uploaded image
-        video.style.display = "none"; // Hide the video stream
+        previewContainer.style.display = "block"; // Show the preview with the uploaded image
+        // video.style.display = "none"; // Keep video visible
         enviarImagenAApi(file);
       }
     });
