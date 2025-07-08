@@ -6,8 +6,7 @@
   <title>Pyros - Smart Photo Analyzer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- Favicon añadido - Reemplaza esta URL con la de tu icono_blanco.png -->
-  <link rel="icon" type="image/png" href="https://placehold.co/32x32/000/fff?text=icono_blanco.png">
+  <link rel="icon" type="image/png" href="=icono_blanco.png">
   <style>
     /* Estilo para el video, por defecto con espejo (para cámara frontal) */
     video {
@@ -63,25 +62,65 @@
       z-index: -1;
     }
 
-    /* Estilos para los botones de pestaña mejorados */
+    /* --- NUEVOS ESTILOS PARA PESTAÑAS INTEGRADAS --- */
+    :root {
+        --duration: .3s;
+    }
+
+    #infoTabs {
+        display: flex;
+        width: 100%;
+        position: relative;
+        justify-content: center;
+        margin-top: 2rem; /* Mantener este margen para la separación de los botones de foto/subida */
+        padding: 0 1em;
+        /* La barra inferior se moverá al resultBox */
+    }
+
     .tab-button {
-      @apply flex-1 px-4 py-2 rounded-xl font-bold text-sm text-gray-700 bg-gray-200 shadow-md transition-all duration-300 ease-in-out;
+        all: unset;
+        flex-grow: 1;
+        z-index: 100;
+        display: flex;
+        cursor: pointer;
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 0;
+        transition: color var(--duration);
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #6b7280; /* gray-500 */
+        white-space: nowrap;
     }
+    
     .tab-button:hover {
-      @apply transform scale-105 shadow-lg;
+        color: #1f2937; /* gray-800 */
     }
+
     .tab-button.active {
-      @apply text-white shadow-xl transform scale-105;
+        background-color: var(--bgColorItem);
+        color: white;
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+        margin-bottom: -2px; /* Overlap the container's border */
+        padding-top: 0.75rem;
+        padding-bottom: calc(0.75rem + 2px); /* Match bottom padding */
+        transition: background-color var(--duration), color var(--duration);
     }
-    #bomberosBtn.active {
-      @apply bg-gradient-to-r from-red-500 to-red-700;
+
+    #resultBox {
+        border-top: 4px solid transparent; /* El borde superior se convierte en la barra, ahora más gruesa */
+        transition: border-color var(--duration);
+        border-radius: 0; /* Remove default radius */
+        border-bottom-left-radius: 1.5rem; /* Keep original bottom radius */
+        border-bottom-right-radius: 1.5rem; /* Keep original bottom radius */
+        box-shadow: none;
+        background-color: #f9fafb; /* gray-50 */
+        margin-top: 0; /* Eliminar el espacio entre los botones y la información */
     }
-    #talleresBtn.active {
-      @apply bg-gradient-to-r from-blue-500 to-blue-700;
-    }
-    #parkingsBtn.active {
-      @apply bg-gradient-to-r from-green-500 to-green-700;
-    }
+    /* --- FIN DE NUEVOS ESTILOS --- */
+
 
     /* Flash Effect for Camera */
     .flash-effect {
@@ -103,26 +142,19 @@
 </head>
 <body class="bg-gradient-to-br from-purple-100 via-pink-100 to-red-100 min-h-screen flex flex-col items-center p-6 relative overflow-y-auto">
 
-  <!-- Particles Canvas -->
   <canvas id="particles"></canvas>
 
   <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col py-8 px-6 space-y-6 relative z-10 fade-in">
     
-    <!-- App Header -->
     <div class="text-center fade-in" style="animation-delay: 0.2s;">
-      <!-- Logo de la aplicación en lugar del texto "Pyros" - Reemplaza esta URL con la de tu Logo_negro.png -->
-      <img src="https://placehold.co/150x50/000/fff?text=Logo_negro.png" alt="Pyros Logo" class="mx-auto mb-2 w-36 h-auto">
+      <img src="Logo_negro.png" alt="Pyros Logo" class="mx-auto mb-2 w-36 h-auto">
       <p class="text-gray-500 text-sm">Tu analizador inteligente de fotos</p>
     </div>
 
-    <!-- Video Stream -->
     <div class="w-full flex flex-col items-center fade-in" style="animation-delay: 0.4s;">
-      <!-- El elemento de video siempre será visible para mostrar la transmisión de la cámara -->
-      <!-- Se añadieron playsinline y muted para una mejor compatibilidad con iOS -->
       <video id="video" class="w-full h-48 object-cover rounded-2xl border-4 border-dashed border-gray-300 mb-4 glow" autoplay playsinline muted></video>
     </div>
 
-    <!-- Buttons -->
     <div class="flex space-x-4 w-full justify-center">
       <button id="takePhotoBtn" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out flex items-center space-x-2 group">
         <i class="fas fa-camera text-xl group-hover:rotate-12 transition-transform duration-300"></i>
@@ -135,41 +167,43 @@
       </button>
     </div>
 
-    <!-- Hidden Upload Input -->
     <input type="file" id="fileInput" accept="image/*" class="hidden">
 
-    <!-- Canvas para captura de foto (sigue oculto, usado para procesamiento) -->
     <canvas id="canvas" class="hidden"></canvas>
 
-    <!-- New container for Preview Captured Image (between buttons and tabs) -->
     <div id="previewContainer" class="w-full flex flex-col items-center mt-4 hidden">
       <img id="preview" class="object-contain rounded-2xl border-4 border-dashed border-gray-300 mirror glow" src="" alt="Vista previa" style="max-width: 90%; max-height: 70vh; margin: auto; background: #fff;">
     </div>
 
-    <!-- Tabs/Buttons for information categories -->
-    <div id="infoTabs" class="flex justify-center w-full mt-4 bg-gray-100 rounded-xl p-2 space-x-2 shadow-md">
-      <button id="bomberosBtn" class="tab-button active">Bomberos</button>
-      <button id="talleresBtn" class="tab-button">Talleres</button>
-      <button id="parkingsBtn" class="tab-button">Parkings</button>
+    <!-- --- ESTRUCTURA HTML DE PESTAÑAS ACTUALIZADA --- -->
+    <div id="infoTabs">
+      <button id="bomberosBtn" class="tab-button active" style="--bgColorItem: #ef4444;">
+        <i class="fas fa-fire-extinguisher mr-2"></i>Bomberos
+      </button>
+      <button id="talleresBtn" class="tab-button" style="--bgColorItem: #3b82f6;">
+        <i class="fas fa-wrench mr-2"></i>Talleres
+      </button>
+      <button id="parkingsBtn" class="tab-button" style="--bgColorItem: #22c55e;">
+        <i class="fas fa-parking mr-2"></i>Parkings
+      </button>
     </div>
 
-    <!-- Result Box -->
-    <div id="resultBox" class="w-full bg-gray-50 rounded-b-xl rounded-tr-xl p-4 text-left text-gray-700 text-sm min-h-24 transition-opacity duration-500 fade-in" style="animation-delay: 0.8s;">
+    <div id="resultBox" class="w-full bg-white p-6 text-left text-gray-700 text-sm min-h-[8rem] transition-opacity duration-500 fade-in">
       <p>Usa la cámara o sube una foto para analizarla.</p>
     </div>
+    <!-- --- FIN DE LA ESTRUCTURA ACTUALIZADA --- -->
 
-    <!-- Loading Spinner -->
+
     <div id="loading" class="hidden flex justify-center items-center">
       <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
     </div>
 
   </div>
 
-  <!-- Footer -->
   <div class="mt-8 text-center text-gray-400 text-xs z-10 fade-in" style="animation-delay: 1s;">
     Pyros © 2025 • Powered by Gemini API
   </div>
-
+  
   <script>
     // Particles Background
     const canvas = document.getElementById('particles');
@@ -231,7 +265,7 @@
     const video = document.getElementById('video');
     const canvasEl = document.getElementById('canvas');
     const preview = document.getElementById('preview');
-    const previewContainer = document.getElementById('previewContainer'); // Get the new container
+    const previewContainer = document.getElementById('previewContainer');
     const takePhotoBtn = document.getElementById('takePhotoBtn');
     const uploadBtn = document.getElementById('uploadBtn');
     const fileInput = document.getElementById('fileInput');
@@ -241,52 +275,43 @@
     const bomberosBtn = document.getElementById('bomberosBtn');
     const talleresBtn = document.getElementById('talleresBtn');
     const parkingsBtn = document.getElementById('parkingsBtn');
+    
+    let activeItem = document.querySelector('#infoTabs .active');
 
-    let detectedCarInfo = null; // Stores the detected car brand, model, year, and propulsion type
-    let detectedLicensePlate = null; // Stores the detected license plate
-
-    // Cache variables for tab content
+    let detectedCarInfo = null;
+    let detectedLicensePlate = null;
     let cachedBomberosInfo = null;
     let cachedTalleresInfo = null;
     let cachedParkingsInfo = null;
 
-    // Helper function to format text from Gemini, handling newlines and potential bold markdown
     function formatGeminiResponse(text) {
-        // First, handle bolding (before splitting by lines to avoid issues)
         let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
-
         const lines = formattedText.split('\n');
         let htmlOutput = '';
         let inList = false;
 
         lines.forEach(line => {
             const trimmedLine = line.trim();
-            // Check if the line looks like a list item (starts with -, *, or a number followed by .)
             const isListItem = trimmedLine.match(/^(\*|-|\d+\.)\s*(.*)/);
 
             if (isListItem) {
                 if (!inList) {
-                    // Start a new unordered list
-                    htmlOutput += '<ul class="list-disc list-inside ml-4 mb-2">'; // Added Tailwind for list styling
+                    htmlOutput += '<ul class="list-disc list-inside ml-4 mb-2">';
                     inList = true;
                 }
-                // Extract content after the list marker
                 const listItemContent = isListItem[2].trim();
-                htmlOutput += `<li class="mb-1">${listItemContent}</li>`; // Added Tailwind for list item spacing
+                htmlOutput += `<li class="mb-1">${listItemContent}</li>`;
             } else {
                 if (inList) {
-                    // End the current list
                     htmlOutput += '</ul>';
                     inList = false;
                 }
-                // Add as a paragraph or simple text
-                if (trimmedLine) { // Only add if not an empty line
+                if (trimmedLine) {
                     htmlOutput += `<p>${trimmedLine}</p>`;
                 }
             }
         });
 
-        // Close list if still open at the end
         if (inList) {
             htmlOutput += '</ul>';
         }
@@ -294,106 +319,73 @@
         return htmlOutput;
     }
 
-    // Activate the camera on load
-    // Attempts to get the rear camera first, then falls back to any available camera
     navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
       .then(stream => {
         video.srcObject = stream;
-        video.style.display = "block"; // Ensures video is visible
-        // Checks if the active camera is the rear camera to remove the mirror effect
+        video.style.display = "block";
         const track = stream.getVideoTracks()[0];
-        const capabilities = track.getCapabilities();
         const settings = track.getSettings();
-
         if (settings.facingMode === 'environment') {
-          video.classList.add('no-mirror'); // Adds class to remove mirror effect
+          video.classList.add('no-mirror');
         } else {
-          video.classList.remove('no-mirror'); // Ensures mirror effect is present if it's a front camera
+          video.classList.remove('no-mirror');
         }
       })
       .catch(err => {
         console.warn('Could not access environment camera, trying default:', err);
-        // Falls back to any available camera (usually front-facing on mobile if environment fails)
         navigator.mediaDevices.getUserMedia({ video: true })
           .then(stream => {
             video.srcObject = stream;
             video.style.display = "block";
-            // Checks if the active camera is the front camera to keep the mirror effect
             const track = stream.getVideoTracks()[0];
             const settings = track.getSettings();
-            if (settings.facingMode === 'user' || !settings.facingMode) { // 'user' for front, undefined if not specified
-              video.classList.remove('no-mirror'); // Ensures mirror effect is present if it's a front camera
+            if (settings.facingMode === 'user' || !settings.facingMode) {
+              video.classList.remove('no-mirror');
             } else {
-              video.classList.add('no-mirror'); // Removes mirror effect if it's another (e.g., default rear)
+              video.classList.add('no-mirror');
             }
           })
           .catch(err => {
             resultBox.innerHTML = '<p class="text-red-500">No se pudo acceder a la cámara. Puedes usar el botón "Subir Foto".</p>';
             console.error('Error al acceder a la cámara:', err);
-            video.style.display = "none"; // Hides video if camera access fails
+            video.style.display = "none";
           });
       });
 
-    // Generic function to call the Gemini API
     async function callGeminiApi(promptText, mimeType = null, imageData = null) {
-      // Gemini API key inserted
-      const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk"; 
-      
+      const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk";
       if (!apiKey) {
-        throw new Error('La clave API de Gemini no está configurada. Asegúrate de que el entorno de Canvas la esté proporcionando o inserta tu clave directamente si no estás en Canvas.');
+        throw new Error('La clave API de Gemini no está configurada.');
       }
-
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      
       const parts = [{ text: promptText }];
       if (mimeType && imageData) {
-        parts.push({
-          inlineData: {
-            mimeType: mimeType,
-            data: imageData
-          }
-        });
+        parts.push({ inlineData: { mimeType: mimeType, data: imageData } });
       }
-
       const payload = {
         contents: [{ role: "user", parts: parts }],
-        generationConfig: {
-          temperature: 0.2,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 500 // Increased to allow more detailed responses
-        }
+        generationConfig: { temperature: 0.2, topP: 0.95, topK: 40, maxOutputTokens: 500 }
       };
-
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(`Error de la API de Gemini: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
       }
-
       const result = await response.json();
-      if (result.candidates && result.candidates.length > 0 &&
-          result.candidates[0].content && result.candidates[0].content.parts &&
-          result.candidates[0].content.parts.length > 0) {
+      if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
         return result.candidates[0].content.parts[0].text;
       } else {
-        throw new Error("No se pudo obtener una respuesta de la API de Gemini o la estructura fue inesperada.");
+        throw new Error("No se pudo obtener una respuesta de la API de Gemini.");
       }
     }
 
-    // Function to send the image to the Gemini API and detect the car
     async function enviarImagenAApi(file) {
       loading.style.display = "flex";
       resultBox.innerHTML = "Procesando imagen con IA...";
-      // video.style.display = "none"; // Keep video visible
-      previewContainer.style.display = "none"; // Hide previous preview
-      
-      // Clear cached info when a new photo is taken
       detectedCarInfo = null; 
       detectedLicensePlate = null;
       cachedBomberosInfo = null;
@@ -408,52 +400,36 @@
           reader.readAsDataURL(file);
         });
 
-        // Prompt to get brand, model, year, and propulsion type
-        // Modified prompt for year: if not found, provide most probable without stating it's a guess.
         const carPrompt = `Analiza la imagen y devuelve la marca, modelo, el año más probable (si no puedes determinar el año exacto, infiere el más probable sin mencionar que es una estimación) y el tipo de propulsión (gasolina, diésel, eléctrico, híbrido) del coche. Responde ÚNICAMENTE con un objeto JSON. Si un dato es desconocido, usa "Desconocido". No uses formato Markdown. Ejemplo de formato: {"marca": "Toyota", "modelo": "Corolla", "año": "2020", "propulsion": "Gasolina"}`;
         const carResultString = await callGeminiApi(carPrompt, file.type, base64ImageData);
         
-        console.log("Raw car info from Gemini:", carResultString); // Log raw response for debugging
-
         try {
-          // Attempt to parse the JSON. Trim whitespace and remove any leading/trailing non-JSON characters.
-          // This regex removes leading/trailing markdown code blocks if present.
           detectedCarInfo = JSON.parse(carResultString.trim().replace(/^```json\n|```$/g, ''));
-          // Validate the parsed object structure
-          if (!detectedCarInfo || typeof detectedCarInfo.marca === 'undefined' || typeof detectedCarInfo.modelo === 'undefined') {
+          if (!detectedCarInfo || typeof detectedCarInfo.marca === 'undefined') {
               throw new Error("Invalid car info structure from API.");
           }
         } catch (e) {
-          console.error("Error parsing car info JSON or invalid structure:", e);
-          // Fallback to default if parsing fails or structure is invalid
+          console.error("Error parsing car info JSON:", e);
           detectedCarInfo = { marca: "Desconocido", modelo: "Desconocido", año: "Desconocido", propulsion: "Desconocido" };
-          resultBox.innerHTML = '<p class="text-red-500">No se pudo detectar el coche con precisión. Intenta con otra imagen o revisa el formato de respuesta de la IA.</p>';
-          // Do not proceed with further API calls if car info is not detected
-          loading.style.display = "none"; // Hide loading here as well
+          resultBox.innerHTML = '<p class="text-red-500">No se pudo detectar el coche con precisión.</p>';
+          loading.style.display = "none";
           return; 
         }
         
-        // Second prompt to detect the license plate
         const licensePlatePrompt = "Detecta la matrícula del vehículo en la imagen. Si no es visible o legible, responde 'No visible'. No uses formato Markdown.";
         const licensePlateResult = await callGeminiApi(licensePlatePrompt, file.type, base64ImageData);
-        
-        detectedLicensePlate = licensePlateResult === "No visible" ? null : licensePlateResult; // Store detected license plate or null
-
-        // Display initial car info
+        detectedLicensePlate = licensePlateResult === "No visible" ? null : licensePlateResult;
         resultBox.innerHTML = `<strong class="font-bold">Coche detectado:</strong> ${detectedCarInfo.marca} ${detectedCarInfo.modelo} (${detectedCarInfo.año})`;
-
-        // Activate Bomberos tab by default and load its content
         activateTab('bomberos');
 
       } catch (error) {
         resultBox.innerHTML = "Error: " + error.message;
         console.error("Error al procesar la imagen con Gemini:", error);
       } finally {
-        loading.style.display = "none"; // Ensure loading is hidden in all cases
+        loading.style.display = "none";
       }
     }
 
-    // Functions to get specific information for each category
     async function getBomberosInfo() {
       if (!detectedCarInfo || detectedCarInfo.marca === "Desconocido") {
         resultBox.innerHTML = '<p class="text-red-500">Primero detecta un coche para obtener esta información.</p>';
@@ -463,25 +439,21 @@
         resultBox.innerHTML = cachedBomberosInfo;
         return;
       }
-
       loading.style.display = "flex";
       resultBox.innerHTML = "Obteniendo información para Bomberos...";
       try {
-        let prompt;
         const carDescription = `${detectedCarInfo.marca} ${detectedCarInfo.modelo} (${detectedCarInfo.año})`;
-
-        if (detectedCarInfo.propulsion && (detectedCarInfo.propulsion.toLowerCase().includes('eléctrico') || detectedCarInfo.propulsion.toLowerCase().includes('híbrido'))) {
-          prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), proporciona información clave para bomberos en 3-4 puntos concisos: tipo de vehículo, ubicación/capacidad de batería, puntos de desconexión de alto voltaje, extintor recomendado (advertir NO usar agua si hay alto voltaje) y si PUEDE SER APAGADO CON AGUA. Sé muy conciso y no uses formato Markdown.`;
+        let prompt;
+        if (detectedCarInfo.propulsion?.toLowerCase().includes('eléctrico') || detectedCarInfo.propulsion?.toLowerCase().includes('híbrido')) {
+          prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), lista 3-4 puntos clave para bomberos: tipo de vehículo, ubicación/capacidad de batería, puntos de desconexión de alto voltaje, extintor recomendado (advertir NO usar agua si hay alto voltaje) y si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
         } else {
-          prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion || 'combustión'}), proporciona información clave para bomberos en 3-4 puntos concisos: tipo de vehículo, riesgos de combustible, extintor recomendado y si PUEDE SER APAGADO CON AGUA. No menciones baterías de alto voltaje. Sé muy conciso y no uses formato Markdown.`;
+          prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion || 'combustión'}), lista 3-4 puntos clave para bomberos: tipo de vehículo, riesgos de combustible, extintor recomendado y si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. No menciones baterías de alto voltaje. Sé muy conciso y no uses formato Markdown.`;
         }
-        
         const info = await callGeminiApi(prompt);
         cachedBomberosInfo = `<strong class="font-bold">Información para Bomberos:</strong><br>${formatGeminiResponse(info)}`;
         resultBox.innerHTML = cachedBomberosInfo;
       } catch (error) {
         resultBox.innerHTML = "Error al obtener información para Bomberos: " + error.message;
-        console.error("Error al obtener información para Bomberos:", error);
       } finally {
         loading.style.display = "none";
       }
@@ -496,25 +468,22 @@
         resultBox.innerHTML = cachedTalleresInfo;
         return;
       }
-
       loading.style.display = "flex";
       resultBox.innerHTML = "Obteniendo información para Talleres...";
       try {
         const carDescription = `${detectedCarInfo.marca} ${detectedCarInfo.modelo} (${detectedCarInfo.año})`;
-        // More concise prompt for Talleres, explicitly asking for a list format
         const prompt = `Para un ${carDescription}, lista 3-4 puntos clave para mantenimiento/reparación y 2-3 fallos comunes. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
         const info = await callGeminiApi(prompt);
         cachedTalleresInfo = `
           <strong class="font-bold">Información para Talleres:</strong><br>
           ${formatGeminiResponse(info)}
-          <a href="https://www.ejemplo.com/ficha_tecnica_${detectedCarInfo.marca.replace(/\s/g, '_')}_${detectedCarInfo.modelo.replace(/\s/g, '_')}.pdf" target="_blank" class="mt-4 inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">
+          <a href="#" target="_blank" class="mt-4 inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">
             Descargar Ficha Técnica
           </a>
         `;
         resultBox.innerHTML = cachedTalleresInfo;
       } catch (error) {
         resultBox.innerHTML = "Error al obtener información para Talleres: " + error.message;
-        console.error("Error al obtener información para Talleres:", error);
       } finally {
         loading.style.display = "none";
       }
@@ -529,68 +498,59 @@
         resultBox.innerHTML = cachedParkingsInfo;
         return;
       }
-
       loading.style.display = "flex";
       resultBox.innerHTML = "Obteniendo información para Parkings...";
       try {
-        let licensePlateToUse = detectedLicensePlate;
-        if (!detectedLicensePlate) {
-          // If no license plate was detected, display "(no encontrada)"
-          licensePlateToUse = "(no encontrada)";
-        }
-
+        const licensePlateToUse = detectedLicensePlate || "(no encontrada)";
         const carDescription = `${detectedCarInfo.marca} ${detectedCarInfo.modelo} (${detectedCarInfo.año})`;
-        // Modified prompt to ensure "inventado" is not explicitly mentioned by the AI
-        // Explicitly asking for a list format
-        const prompt = `Para un ${carDescription} con matrícula ${licensePlateToUse}, genera información útil para la gestión de un parking. Incluye: Modelo, Marca, Año, Matrícula, Dueño (inventado, solo el nombre), y 2-3 datos adicionales útiles (ej. dimensiones, combustible, necesidad de carga si es eléctrico). Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
+        const prompt = `Para un ${carDescription} con matrícula ${licensePlateToUse}, genera información útil para la gestión de un parking. Incluye: Modelo, Marca, Año, Matrícula, Dueño (inventa un nombre y añade "(inventado)" al final), y 2-3 datos adicionales útiles (ej. dimensiones, combustible, necesidad de carga si es eléctrico). Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
         const info = await callGeminiApi(prompt);
         cachedParkingsInfo = `<strong class="font-bold">Información para Parkings:</strong><br>${formatGeminiResponse(info)}`;
         resultBox.innerHTML = cachedParkingsInfo;
       } catch (error) {
         resultBox.innerHTML = "Error al obtener información para Parkings: " + error.message;
-        console.error("Error al obtener información para Parkings:", error);
       } finally {
         loading.style.display = "none";
       }
     }
 
-    // Function to activate a tab and load its content
     function activateTab(tabName) {
       // Remove 'active' class from all buttons
       bomberosBtn.classList.remove('active');
       talleresBtn.classList.remove('active');
       parkingsBtn.classList.remove('active');
 
-      // Add 'active' class to the clicked button
+      let targetButton;
       if (tabName === 'bomberos') {
         bomberosBtn.classList.add('active');
+        targetButton = bomberosBtn;
         getBomberosInfo();
       } else if (tabName === 'talleres') {
         talleresBtn.classList.add('active');
+        targetButton = talleresBtn;
         getTalleresInfo();
       } else if (tabName === 'parkings') {
         parkingsBtn.classList.add('active');
+        targetButton = parkingsBtn;
         getParkingsInfo();
+      }
+      
+      if (targetButton) {
+        activeItem = targetButton;
+        const activeColor = activeItem.style.getPropertyValue('--bgColorItem');
+        // Ahora el borde está en resultBox
+        resultBox.style.borderColor = activeColor;
       }
     }
 
-    // Event Listeners for the new tab buttons
     bomberosBtn.addEventListener('click', () => activateTab('bomberos'));
     talleresBtn.addEventListener('click', () => activateTab('talleres'));
     parkingsBtn.addEventListener('click', () => activateTab('parkings'));
 
-    // Capture photo from camera and send it to the API
     takePhotoBtn.addEventListener('click', () => {
-      // Vibrate the device
-      if (navigator.vibrate) {
-        navigator.vibrate(200); // Vibrate for 200ms
-      }
-
-      // Add flash effect
+      if (navigator.vibrate) { navigator.vibrate(200); }
       video.classList.add('flash-effect');
-      setTimeout(() => {
-        video.classList.remove('flash-effect');
-      }, 200); // Flash duration
+      setTimeout(() => { video.classList.remove('flash-effect'); }, 200);
 
       canvasEl.width = video.videoWidth;
       canvasEl.height = video.videoHeight;
@@ -598,26 +558,30 @@
       canvasEl.toBlob((blob) => {
         if (blob) {
           const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
-          // preview.src = URL.createObjectURL(blob); // No longer displaying captured image here
-          previewContainer.style.display = "none"; // Ensure preview container is hidden for captured photos
+          preview.src = URL.createObjectURL(blob);
+          previewContainer.style.display = "block";
           enviarImagenAApi(file);
         }
       }, "image/jpeg");
     });
 
-    // Upload photo from device and send it to the API
-    uploadBtn.addEventListener('click', () => {
-      fileInput.click();
-    });
+    uploadBtn.addEventListener('click', () => { fileInput.click(); });
 
     fileInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
       if (file) {
         preview.src = URL.createObjectURL(file);
-        previewContainer.style.display = "block"; // Show the preview with the uploaded image
-        // video.style.display = "none"; // Keep video visible
+        previewContainer.style.display = "block";
         enviarImagenAApi(file);
       }
+    });
+
+    // --- INICIALIZACIÓN DEL BORDE DE LA PESTAÑA ---
+    window.addEventListener('load', () => {
+        if(activeItem) {
+            const activeColor = activeItem.style.getPropertyValue('--bgColorItem');
+            resultBox.style.borderColor = activeColor;
+        }
     });
   </script>
 </body>
