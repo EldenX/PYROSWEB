@@ -359,7 +359,7 @@
       });
 
     async function callGeminiApi(promptText, mimeType = null, imageData = null) {
-      const apiKey = "";
+      const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk";
       if (!apiKey) {
         throw new Error('La clave API no está configurada.');
       }
@@ -452,11 +452,12 @@
         let prompt;
         if (detectedCarInfo.propulsion?.toLowerCase().includes('eléctrico') || detectedCarInfo.propulsion?.toLowerCase().includes('híbrido')) {
           // MODIFICACIÓN: Se asegura la inclusión de 'Fireman Access' para marcas Renault/Dacia/Alpine/Mobilize
-          // y se elimina la referencia a "sistemas adicionales anti-incendios".
+          // y se inventa la ubicación para otros vehículos eléctricos/híbridos.
+          // Se elimina la referencia a "sistemas adicionales anti-incendios".
           if (detectedCarInfo.marca.toLowerCase() === 'renault' || detectedCarInfo.marca.toLowerCase() === 'dacia' || detectedCarInfo.marca.toLowerCase() === 'alpine' || detectedCarInfo.marca.toLowerCase() === 'mobilize') {
             prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), lista 3-4 puntos clave para bomberos: tipo de vehículo, ubicación/capacidad de batería, extintor recomendado (advertir NO usar agua si hay alto voltaje). **Puntos de desconexión de alto voltaje: Ubicados comúnmente bajo el capó o en el maletero (inventado para demo).** **Este vehículo cuenta con el sistema 'Fireman Access' de Renault, ubicado típicamente bajo el asiento trasero para inundación de batería.** Indica si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
           } else {
-            prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), lista 3-4 puntos clave para bomberos: tipo de vehículo, ubicación/capacidad de batería, extintor recomendado (advertir NO usar agua si hay alto voltaje). **Puntos de desconexión de alto voltaje: Ubicados comúnmente bajo el capó o en el maletero (inventado para demo).** Si tiene sistema 'Fireman Access' y su ubicación (inventa la ubicación si no la conoces, para fines de demostración), indica si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
+            prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), lista 3-4 puntos clave para bomberos: tipo de vehículo, ubicación/capacidad de batería, extintor recomendado (advertir NO usar agua si hay alto voltaje). **Puntos de desconexión de alto voltaje: Ubicados comúnmente bajo el capó o en el maletero (inventado para demo).** **Este vehículo cuenta con el sistema 'Fireman Access' (simulado para demo), ubicado en el compartimento delantero derecho (inventado para demo).** Indica si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
           }
         } else {
           prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion || 'combustión'}), lista 3-4 puntos clave para bomberos: tipo de vehículo, riesgos de combustible, extintor recomendado y si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. No menciones baterías de alto voltaje. Sé muy conciso y no uses formato Markdown.`;
