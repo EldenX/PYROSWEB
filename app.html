@@ -358,34 +358,34 @@
           });
       });
 
+    // MODIFICADO: Esta función ahora llama a tu backend en Railway
     async function callGeminiApi(promptText, mimeType = null, imageData = null) {
-      const apiKey = "AIzaSyCrhgku7xjaToAZVzjiY5hFfqoQk1Jinrk";
-      if (!apiKey) {
-        throw new Error('La clave API no está configurada.');
-      }
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      const parts = [{ text: promptText }];
-      if (mimeType && imageData) {
-        parts.push({ inlineData: { mimeType: mimeType, data: imageData } });
-      }
+      // URL de tu backend en Railway
+      const backendUrl = "https://api.pyros.site/api/gemini"; 
+
       const payload = {
-        contents: [{ role: "user", parts: parts }],
-        generationConfig: { temperature: 0.2, topP: 0.95, topK: 40, maxOutputTokens: 500 }
+        prompt: promptText,
+        mimeType: mimeType,
+        imageData: imageData
       };
-      const response = await fetch(apiUrl, {
+
+      const response = await fetch(backendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Error de la API: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
+        throw new Error(`Error del backend: ${response.status} - ${errorData.error || 'Error desconocido'}`);
       }
+
       const result = await response.json();
+      // El backend ya debería devolver la respuesta de Gemini directamente
       if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
         return result.candidates[0].content.parts[0].text;
       } else {
-        throw new Error("No se pudo obtener una respuesta de la API.");
+        throw new Error("No se pudo obtener una respuesta válida del backend.");
       }
     }
 
@@ -406,6 +406,9 @@
           reader.readAsDataURL(file);
         });
 
+        // NOTA: El prompt del coche debe adaptarse al modelo usado en el backend (gemini-pro-vision)
+        // Asegúrate de que el modelo gemini-pro-vision es capaz de procesar imágenes.
+        // Si no, considera usar gemini-1.5-flash-latest si es accesible con tu clave.
         const carPrompt = `Analiza la imagen y devuelve la marca, modelo, el año más probable (si no puedes determinar el año exacto, infiere el más probable sin mencionar que es una estimación) y el tipo de propulsión (gasolina, diésel, eléctrico, híbrido) del coche. Responde ÚNICAMENTE con un objeto JSON. Si un dato es desconocido, usa "Desconocido". No uses formato Markdown. Ejemplo de formato: {"marca": "Toyota", "modelo": "Corolla", "año": "2020", "propulsion": "Gasolina"}`;
         const carResultString = await callGeminiApi(carPrompt, file.type, base64ImageData);
         
