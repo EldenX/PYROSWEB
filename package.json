@@ -1,10 +1,10 @@
 {
   "name": "pyros-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend para la app Pyros",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js" // Comando importante para que Railway sepa cómo iniciar
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
