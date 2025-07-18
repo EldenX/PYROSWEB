@@ -451,6 +451,7 @@
             background-clip: text;
             transition: all 0.3s ease;
             display: inline-block;
+            position: relative;
         }
 
         .link-card:hover .link-icon {
@@ -505,7 +506,7 @@
         }
 
         .link-button:hover::before {
-            left = 100%;
+            left: 100%;
         }
 
         .link-button:hover {
@@ -735,40 +736,6 @@
                 transform: translateY(0); 
             }
         }
-
-        /* Loading Screen */
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--color-background); /* Fondo del loading screen */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999; /* Asegura que esté por encima de todo */
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-
-        .loading-logo {
-            height: 100px; /* Ajusta el tamaño del logo según sea necesario */
-            animation: pulse 1.5s infinite ease-in-out;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .loading.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none; /* Evita interacciones después de ocultarse */
-        }
     </style>
 </head>
 <body>
@@ -795,10 +762,10 @@
     <section class="hero" id="hero">
         <!-- Vehicle showcase -->
         <div class="vehicle-showcase">
-            <img src="https://placehold.co/200x120/000000/FFFFFF?text=Tesla" alt="Tesla" class="vehicle">
-            <img src="https://placehold.co/200x120/000000/FFFFFF?text=Toyota" alt="Toyota" class="vehicle">
-            <img src="https://placehold.co/200x120/000000/FFFFFF?text=Citroen" alt="Citroen" class="vehicle">
-            <img src="https://placehold.co/200x120/000000/FFFFFF?text=MG" alt="MG" class="vehicle">
+            <img src="tesla.jpg" alt="Tesla" class="vehicle">
+            <img src="toyota.webp" alt="Toyota" class="vehicle">
+            <img src="citroen.jpg" alt="Citroen" class="vehicle">
+            <img src="mg.jpg" alt="MG" class="vehicle">
         </div>
 
         <div class="hero-content">
@@ -953,45 +920,98 @@
         // Scroll animations
         const observerOptions = {
             threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
+            rootMargin: '0px 0px -50px 0px' 
         };
 
-        const observer = new IntersectionObserver((entries) => {
+        const fadeInElements = document.querySelectorAll('.fade-in');
+
+        const observer = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
 
-        document.querySelectorAll('.fade-in').forEach(el => {
-            observer.observe(el);
+        fadeInElements.forEach(element => {
+            observer.observe(element);
         });
 
-        // Link functions
+        // Smooth scroll to top
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Handle link clicks (for demonstration, replace with actual URLs)
         function openLink(type) {
-            switch(type) {
+            let url = '#';
+            switch (type) {
                 case 'app':
-                    window.open('app.html', '_blank');
+                    url = 'https://app.pyros.site'; // Replace with actual app URL
                     break;
                 case 'demo':
-                    window.open('example.html', '_blank');
+                    url = 'https://demo.pyros.site'; // Replace with actual demo URL
                     break;
                 case 'pdf':
-                    window.open('memoria_Pyros.pdf', '_blank');
+                    url = 'https://docs.pyros.site/memoria.pdf'; // Replace with actual PDF URL
                     break;
                 case 'video':
-                    window.open('https://www.youtube.com/watch?v=jnfkev34DwM', '_blank');
+                    url = 'https://youtube.com/pyros-presentation'; // Replace with actual video URL
+                    break;
+                default:
                     break;
             }
+            window.open(url, '_blank');
         }
 
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        // Initialize particles on load
+        document.addEventListener('DOMContentLoaded', createParticles);
 
-        // Initialize effects
-        createParticles();
+        // Add 'hidden' class for loading screen
+        const loadingScreenStyle = document.createElement('style');
+        loadingScreenStyle.innerHTML = `
+            .loading {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: var(--color-background);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                transition: opacity 1s ease-out;
+            }
+            .loading.hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+            .loading-logo {
+                width: 150px;
+                height: auto;
+                animation: pulse 1.5s infinite alternate;
+            }
+            @keyframes pulse {
+                0% { transform: scale(1); opacity: 1; }
+                100% { transform: scale(1.1); opacity: 0.8; }
+            }
+            .fade-in {
+                opacity: 0;
+                transform: translateY(20px);
+                transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            }
+            .fade-in.visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        `;
+        document.head.appendChild(loadingScreenStyle);
     </script>
 </body>
 </html>
+
