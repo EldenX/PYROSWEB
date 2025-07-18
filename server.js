@@ -67,3 +67,6 @@ app.post('/api/gemini', async (req, res) => {
 app.listen(port, () => {
     console.log(`🚀 Servidor escuchando en el puerto ${port}`);
 });
+app.get('/', (req, res) => {
+    res.send('Backend de Pyros funcionando!');
+});
