@@ -2,7 +2,7 @@
   "name": "pyros-backend",
   "version": "1.0.0",
   "description": "Backend para la app Pyros",
-  "main": "server.js",
+  "main": "server.js" ,
   "scripts": {
     "start": "node server.js"
   },
