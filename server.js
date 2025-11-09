@@ -6,7 +6,7 @@ const cors = require('cors');
 
 const app = express();
 // Railway asignará un puerto automáticamente a través de la variable de entorno PORT
-const port = process.env.PORT || 3000; 
+const port = process.env.PORT || 3000;
 
 // Tu clave de API de Gemini se leerá de las variables de entorno de Railway
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -18,6 +18,14 @@ app.use(express.json({ limit: '10mb' })); // Aumenta el límite para manejar im�
 // Endpoint de prueba para verificar que el servidor está funcionando
 app.get('/', (req, res) => {
     res.send('Backend de Pyros funcionando!');
+});
+
+// ===================================================================
+//  ENDPOINT DE HEALTH CHECK (¡NUEVO Y MUY IMPORTANTE!)
+// ===================================================================
+// Esto le dice a Railway que el servidor está despierto y listo.
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
 });
 
 // Endpoint para comunicarse con la API de Gemini
@@ -36,12 +44,11 @@ app.post('/api/gemini', async (req, res) => {
         return res.status(400).json({ error: 'El prompt es requerido.' });
     }
 
-    // URL de la API de Gemini (usando gemini-2.0-flash para consistencia)
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+    // URL de la API de Gemini (actualizada al modelo más reciente)
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
     const parts = [{ text: prompt }];
     if (mimeType && imageData) {
-        // CORRECCIÓN CLAVE: Usar 'inlineData' y 'mimeType' en camelCase
         parts.push({
             inlineData: {
                 mimeType: mimeType,
@@ -52,10 +59,10 @@ app.post('/api/gemini', async (req, res) => {
 
     const payload = {
         contents: [{ role: "user", parts: parts }],
-        generationConfig: { // CORRECCIÓN: Usar 'generationConfig' en camelCase
+        generationConfig: {
             temperature: 0.2,
-            topP: 0.95, // CORRECCIÓN: Usar 'topP' en camelCase
-            topK: 40,    // CORRECCIÓN: Usar 'topK' en camelCase
+            topP: 0.95,
+            topK: 40,
             maxOutputTokens: 500
         }
     };
@@ -72,9 +79,9 @@ app.post('/api/gemini', async (req, res) => {
         // Si la respuesta de Gemini no es OK, loguea el error y reenvíalo
         if (!apiResponse.ok) {
             console.error('Error de la API de Gemini:', result);
-            return res.status(apiResponse.status).json({ 
-                error: 'Error de la API de Gemini', 
-                details: result.error?.message || JSON.stringify(result) 
+            return res.status(apiResponse.status).json({
+                error: 'Error de la API de Gemini',
+                details: result.error?.message || JSON.stringify(result)
             });
         }
         
@@ -87,7 +94,10 @@ app.post('/api/gemini', async (req, res) => {
     }
 });
 
-// Inicia el servidor
-app.listen(port, () => {
-    console.log(`🚀 Servidor escuchando en el puerto ${port}`);
+// ===================================================================
+//  INICIO DEL SERVIDOR (¡CORREGIDO!)
+// ===================================================================
+// Debes escuchar en '0.0.0.0' para que Railway pueda conectarse
+app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Servidor escuchando en el puerto ${port} y host 0.0.0.0`);
 });
