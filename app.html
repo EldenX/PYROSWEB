@@ -360,8 +360,12 @@
 
     // MODIFICADO: Esta función ahora llama a tu backend en Railway
     async function callGeminiApi(promptText, mimeType = null, imageData = null) {
-      // URL de tu backend en Railway
-      const backendUrl = "https://api.pyros.site/"; 
+      
+      // ===================================================================
+      //  CORRECCIÓN CRÍTICA DE URL
+      // ===================================================================
+      // Tu servidor escucha en '/api/gemini', no en '/'.
+      const backendUrl = "https://api.pyros.site/api/gemini"; 
 
       const payload = {
         prompt: promptText,
@@ -369,29 +373,49 @@
         imageData: imageData
       };
 
-      const response = await fetch(backendUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // Añadimos un timeout para el cold start
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 35000); // 35 segundos de timeout
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Error del backend: ${response.status} - ${errorData.error || 'Error desconocido'}`);
-      }
+      try {
+        const response = await fetch(backendUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal // Asignar el AbortController
+        });
 
-      const result = await response.json();
-      // El backend ya debería devolver la respuesta de Gemini directamente
-      if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
-        return result.candidates[0].content.parts[0].text;
-      } else {
-        throw new Error("No se pudo obtener una respuesta válida del backend.");
+        clearTimeout(timeoutId); // Limpiar el timeout si la respuesta llega a tiempo
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Error del backend: ${response.status} - ${errorData.error || 'Error desconocido'}`);
+        }
+
+        const result = await response.json();
+        // El backend ya debería devolver la respuesta de Gemini directamente
+        if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
+          return result.candidates[0].content.parts[0].text;
+        } else {
+          // Si la respuesta es exitosa pero no tiene el formato esperado
+          console.error("Respuesta inesperada del backend:", result);
+          throw new Error("Respuesta inesperada del backend.");
+        }
+      } catch (error) {
+        clearTimeout(timeoutId); // Asegurarse de limpiar el timeout en caso de error
+        if (error.name === 'AbortError') {
+          console.error('La solicitud ha superado el tiempo límite (35s).', error);
+          throw new Error('El servidor está tardando demasiado en responder (Timeout).');
+        } else {
+          console.error('Error en callGeminiApi:', error);
+          throw error; // Re-lanzar el error original
+        }
       }
     }
 
     async function enviarImagenAApi(file) {
       loading.style.display = "flex";
-      resultBox.innerHTML = "Procesando imagen con IA...";
+      resultBox.innerHTML = "Procesando imagen con IA... (El primer inicio puede tardar 30s)"; // Mensaje actualizado
       detectedCarInfo = null; 
       detectedLicensePlate = null;
       cachedBomberosInfo = null;
@@ -406,9 +430,6 @@
           reader.readAsDataURL(file);
         });
 
-        // NOTA: El prompt del coche debe adaptarse al modelo usado en el backend (gemini-pro-vision)
-        // Asegúrate de que el modelo gemini-pro-vision es capaz de procesar imágenes.
-        // Si no, considera usar gemini-1.5-flash-latest si es accesible con tu clave.
         const carPrompt = `Analiza la imagen y devuelve la marca, modelo, el año más probable (si no puedes determinar el año exacto, infiere el más probable sin mencionar que es una estimación) y el tipo de propulsión (gasolina, diésel, eléctrico, híbrido) del coche. Responde ÚNICAMENTE con un objeto JSON. Si un dato es desconocido, usa "Desconocido". No uses formato Markdown. Ejemplo de formato: {"marca": "Toyota", "modelo": "Corolla", "año": "2020", "propulsion": "Gasolina"}`;
         const carResultString = await callGeminiApi(carPrompt, file.type, base64ImageData);
         
@@ -418,9 +439,9 @@
               throw new Error("Invalid car info structure from API.");
           }
         } catch (e) {
-          console.error("Error parsing car info JSON:", e);
+          console.error("Error parsing car info JSON:", e, "String recibido:", carResultString);
           detectedCarInfo = { marca: "Desconocido", modelo: "Desconocido", año: "Desconocido", propulsion: "Desconocido" };
-          resultBox.innerHTML = '<p class="text-red-500">No se pudo detectar el coche con precisión.</p>';
+          resultBox.innerHTML = `<p class="text-red-500">No se pudo detectar el coche con precisión. Respuesta: ${carResultString}</p>`;
           loading.style.display = "none";
           return; 
         }
@@ -454,9 +475,6 @@
         const carDescription = `${detectedCarInfo.marca} ${detectedCarInfo.modelo} (${detectedCarInfo.año})`;
         let prompt;
         if (detectedCarInfo.propulsion?.toLowerCase().includes('eléctrico') || detectedCarInfo.propulsion?.toLowerCase().includes('híbrido')) {
-          // MODIFICACIÓN: Se asegura la inclusión de 'Fireman Access' para marcas Renault/Dacia/Alpine/Mobilize
-          // y se inventa la ubicación para otros vehículos eléctricos/híbridos.
-          // Se elimina la referencia a "sistemas adicionales anti-incendios".
           if (detectedCarInfo.marca.toLowerCase() === 'renault' || detectedCarInfo.marca.toLowerCase() === 'dacia' || detectedCarInfo.marca.toLowerCase() === 'alpine' || detectedCarInfo.marca.toLowerCase() === 'mobilize') {
             prompt = `Para el vehículo ${carDescription} (${detectedCarInfo.propulsion}), lista 3-4 puntos clave para bomberos: tipo de vehículo, ubicación/capacidad de batería, extintor recomendado (advertir NO usar agua si hay alto voltaje). **Puntos de desconexión de alto voltaje: Ubicados comúnmente bajo el capó o en el maletero (inventado para demo).** **Este vehículo cuenta con el sistema 'Fireman Access' de Renault, ubicado típicamente bajo el asiento trasero para inundación de batería.** Indica si PUEDE SER APAGADO CON AGUA. Presenta la información como una lista. Sé muy conciso y no uses formato Markdown.`;
           } else {
@@ -633,8 +651,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
