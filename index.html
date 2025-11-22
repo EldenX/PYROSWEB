@@ -5,17 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pyros - Inteligencia Artificial para Gestión de Vehículos</title>
 
-    <!-- Favicons -->
     <link rel="icon" type="image/png" href="icon_negro.png" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/png" href="icon_blanco.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="icon_negro.png">
     
-    <!-- Meta tags -->
     <meta name="description" content="Pyros - Plataforma de IA para identificación y gestión automatizada de vehículos.">
     <meta name="keywords" content="inteligencia artificial, vehículos, gestión automatizada, IA, Pyros,">
     <meta name="author" content="Pyros Technologies">
     
-    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Pyros - Inteligencia Artificial para Gestión de Vehículos">
     <meta property="og:description" content="Plataforma de IA para identificación y gestión automatizada de vehículos">
@@ -1234,18 +1231,14 @@
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
     <div class="loading" id="loading">
         <img src="Logo_blanco.png" alt="Pyros" class="loading-logo">
     </div>
 
-    <!-- Interactive particles -->
     <div class="particles" id="particles"></div>
 
-    <!-- Mouse trail -->
     <div class="mouse-trail" id="mouseTrail"></div>
 
-    <!-- Navigation -->
     <nav class="nav">
         <div class="nav-content">
             <img src="Logo_blanco.png" alt="Pyros" class="logo" onclick="scrollToTop()">
@@ -1256,9 +1249,7 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero" id="hero">
-        <!-- Vehicle showcase -->
         <div class="vehicle-showcase">
             <img src="tesla.jpg" alt="Tesla" class="vehicle">
             <img src="toyota.webp" alt="Toyota" class="vehicle">
@@ -1274,7 +1265,6 @@
         </div>
     </section>
 
-    <!-- Main Links Section -->
     <section class="main-links" id="links">
         <h2 class="section-title fade-in">Recursos Pyros</h2>
         <div class="links-grid">
@@ -1316,7 +1306,7 @@
                 </button>
             </div>
 
-            <div class="link-card fade-in" onclick="openLink('https://youtu.be/jnfkev34DwM')">
+            <div class="link-card fade-in" onclick="openLink('video')">
                 <div class="link-icon">
                     <i class="fas fa-video"></i>
                 </div>
@@ -1331,7 +1321,6 @@
         </div>
     </section>
 
-    <!-- Features Section -->
     <section class="features" id="features">
         <div class="features-content">
             <h2 class="section-title fade-in">¿Por qué Pyros?</h2>
@@ -1369,7 +1358,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
             <img src="Logo_blanco.png" alt="Pyros" class="footer-logo" onclick="scrollToTop()">
@@ -1396,7 +1384,6 @@
         </div>
     </footer>
 
-    <!-- PDF Modal -->
     <div class="pdf-modal" id="pdfModal">
         <div class="pdf-modal-content">
             <div class="pdf-modal-header">
@@ -1416,7 +1403,6 @@
         </div>
     </div>
 
-    <!-- Video Modal -->
     <div class="video-modal" id="videoModal">
         <div class="video-modal-content">
             <div class="video-modal-header">
@@ -1563,8 +1549,8 @@
             const modal = document.getElementById('videoModal');
             const videoFrame = document.getElementById('videoFrame');
             
-            // Video de presentación Pyros
-            videoFrame.src = '';
+            // Video de presentación Pyros (Enlace actualizado)
+            videoFrame.src = 'https://www.youtube.com/embed/jnfkev34DwM?autoplay=1';
             
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
